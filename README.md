@@ -14,7 +14,7 @@ A script to combine several Excel files for one.
 ```python
 # setting.py
 FILE_SAVE_PATH = r''
-NEED_COmBINE_DICTORY_PATH = r''
+NEED_COMBINE_DICTORY_PATH = r''
 MODE = 1
 ```
 
