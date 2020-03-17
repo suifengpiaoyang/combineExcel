@@ -34,11 +34,12 @@ MODE 表示模式选择，目前只有 0 和 1 两种模式：
 
 from setting import FILE_SAVE_PATH, NEED_COMBINE_DICTORY_PATH, MODE
 
-if MODE not in (0,1):
+if MODE not in (0, 1):
     print('请在 setting.py 中设置正确的 MODE 值，')
     print('目前只支持 0 和 1,现在程序停止。')
     os.system('pause')
     sys.exit()
+
 
 class CombineExcelFiles:
 
@@ -72,47 +73,48 @@ class CombineExcelFiles:
         self.max_row = 0
         self.max_column = 0
 
+    def load_and_combine(self, Excel_abs_path, mode=MODE):
+
+        wb = openpyxl.load_workbook(Excel_abs_path)
+        ws = wb.active
+        # 得到目标表格最大的行列数
+        max_row = ws.max_row
+        max_column = ws.max_column
+        if mode == 0:
+            for row in range(1, max_row + 1):
+                for column in range(1, max_column + 1):
+                    self.ws.cell(
+                        row=self.max_row + 1, column=column).value = ws.cell(row=row, column=column).value
+                self.max_row += 1
+        elif mode == 1:
+            if self.max_row == 0:
+                for row in range(1, max_row + 1):
+                    for column in range(1, max_column + 1):
+                        self.ws.cell(
+                            row=self.max_row + 1, column=column).value = ws.cell(row=row, column=column).value
+                    self.max_row += 1
+            else:
+                for row in range(2, max_row + 1):
+                    for column in range(1, max_column + 1):
+                        self.ws.cell(
+                            row=self.max_row + 1, column=column).value = ws.cell(row=row, column=column).value
+                    self.max_row += 1
+        else:
+            pass
+        wb.close()
+
     def combine(self, mode=MODE):
 
         # 不同的 mode 代表着不同的表格合并策略
         # 默认 0 代表着全合并
         # 数字 1 代表着除了第一个表格，其他表格忽略掉第一行
         target_file_list = os.listdir(self.target_path)
-        for line in target_file_list:
-            if '.' in line and '合并' not in line:
-                head, tail = line.rsplit('.', 1)
-                if tail == 'xlsx':
-                    print(line)
-                    abs_path = os.path.join(self.target_path, line)
-                    wb = openpyxl.load_workbook(abs_path)
-                    ws = wb.active
-                    # 得到目标表格最大的行列数
-                    max_row = ws.max_row
-                    max_column = ws.max_column
-                    if mode == 0:
-                        for row in range(1, max_row + 1):
-                            for column in range(1, max_column + 1):
-                                self.ws.cell(
-                                    row=self.max_row + 1, column=column).value = ws.cell(row=row, column=column).value
-                            self.max_row += 1
-                    elif mode == 1:
-                        if self.max_row == 0:
-                            for row in range(1, max_row + 1):
-                                for column in range(1, max_column + 1):
-                                    self.ws.cell(
-                                        row=self.max_row + 1, column=column).value = ws.cell(row=row, column=column).value
-                                self.max_row += 1
-                        else:
-                            for row in range(2, max_row + 1):
-                                for column in range(1, max_column + 1):
-                                    self.ws.cell(
-                                        row=self.max_row + 1, column=column).value = ws.cell(row=row, column=column).value
-                                self.max_row += 1
-                    wb.close()
-                else:
-                    pass
-            else:
-                pass
+        for root, dirs, files in os.walk(self.target_path):
+            for file in files:
+                if file.endswith('.xlsx') and '合并' not in file:
+                    Excel_abs_path = os.path.join(root, file)
+                    print(Excel_abs_path)
+                    self.load_and_combine(Excel_abs_path)
 
     def close(self):
         self.wb.save(self.file_path)
