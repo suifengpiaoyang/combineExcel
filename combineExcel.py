@@ -7,7 +7,7 @@ import traceback
 if not os.path.exists('setting.py'):
     with open('setting.py', 'w') as fl:
         fl.write("FILE_SAVE_PATH = r''\n")
-        fl.write("NEED_CONBINE_DICTORY_PATH = r''\n")
+        fl.write("NEED_COMBINE_DICTORY_PATH = r''\n")
         fl.write("MODE = 1\n")
     print('''
 因第一次运行，请先填好 setting.py 文件。
@@ -15,7 +15,7 @@ if not os.path.exists('setting.py'):
 
 FILE_SAVE_PATH 填写合并完后文件保存路径；
 
-NEED_CONBINE_DICTORY_PATH 填写需要合并的文件夹路径；
+NEED_COMBINE_DICTORY_PATH 填写需要合并的文件夹路径；
 如果都不填写，则默认合并脚本路径下的后缀名为 .xlsx 的
 文件，并且生成的文件也保存在该路径下。后续生成的文件不
 会进入合并的列表中。
@@ -32,7 +32,7 @@ MODE 表示模式选择，目前只有 0 和 1 两种模式：
     os.system('pause')
     sys.exit()
 
-from setting import FILE_SAVE_PATH, NEED_CONBINE_DICTORY_PATH, MODE
+from setting import FILE_SAVE_PATH, NEED_COMBINE_DICTORY_PATH, MODE
 
 if MODE not in (0,1):
     print('请在 setting.py 中设置正确的 MODE 值，')
@@ -51,10 +51,10 @@ class CombineExcelFiles:
             self.file_path = os.path.join(self.default_path, self.filename)
         else:
             self.file_path = os.path.join(FILE_SAVE_PATH, self.filename)
-        if len(NEED_CONBINE_DICTORY_PATH) == 0:
+        if len(NEED_COMBINE_DICTORY_PATH) == 0:
             self.target_path = self.default_path
         else:
-            self.target_path = NEED_CONBINE_DICTORY_PATH
+            self.target_path = NEED_COMBINE_DICTORY_PATH
 
     def run(self, mode=MODE):
         try:
