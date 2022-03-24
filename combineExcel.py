@@ -78,28 +78,30 @@ class CombineExcelFiles:
         self.log_file = LOG_FILE
         self.save_file = os.path.join(FILE_SAVE_PATH, self.filename)
         self.combine_file_path = NEED_COMBINE_DICTORY_PATH
+        self.new_path = []
+        self.save_flag = False
 
     def run(self, mode=MODE):
         try:
             if not os.path.exists(self.save_file) or not os.path.exists(self.log_file):
                 safe_remove(self.save_file)
                 safe_remove(self.log_file)
-                self.log_flag = False
                 self.log_data = JsonDb()
                 self.log_data['path_md5'] = []
+                self.get_new_path()
                 self.create_excel()
+                self.save_flag = True
                 self.combine(mode)
             else:
-                print('正在加载初始表格...')
-                self.load_excel(self.save_file)
-                print('初始表格加载完成。')
-                self.log_flag = True
                 self.log_data = JsonDb.from_file(self.log_file)
-                self.combine(mode)
-
-        except Exception as e:
-            traceback.print_exc()
-            os.system('pause')
+                self.get_new_path()
+                if len(self.new_path) == 0:
+                    self.save_flag = False
+                    print('没有检测到新的需要合并的 Excel 文件。')
+                else:
+                    self.save_flag = True
+                    self.load_excel(self.save_file)
+                    self.combine(mode)
         finally:
             self.close()
 
@@ -145,31 +147,36 @@ class CombineExcelFiles:
             pass
         wb.close()
 
-    def combine(self, mode=MODE):
-
-        # 不同的 mode 代表着不同的表格合并策略
-        # 默认 0 代表着全合并
-        # 数字 1 代表着除了第一个表格，其他表格忽略掉第一行
-        target_file_list = os.listdir(self.combine_file_path)
+    def get_new_path(self):
         for root, dirs, files in os.walk(self.combine_file_path):
             for file in files:
                 if file.endswith('.xlsx') and '合并' not in file:
                     excel_abs_path = os.path.join(root, file)
                     excel_abs_path_md5 = md5_text(excel_abs_path)
                     if excel_abs_path_md5 not in self.log_data['path_md5']:
-                        print(excel_abs_path)
-                        self.load_and_combine(excel_abs_path)
+                        self.new_path.append(excel_abs_path)
                         self.log_data['path_md5'].append(excel_abs_path_md5)
+
+    def combine(self, mode=MODE):
+
+        # 不同的 mode 代表着不同的表格合并策略
+        # 默认 0 代表着全合并
+        # 数字 1 代表着除了第一个表格，其他表格忽略掉第一行
+        for excel_path in self.new_path:
+            print(excel_path)
+            self.load_and_combine(excel_path)
 
     def close(self):
         try:
-            self.wb.save(self.save_file)
-            self.log_data.save(self.log_file)
+            if self.save_flag:
+                self.wb.save(self.save_file)
+                self.log_data.save(self.log_file)
         except PermissionError:
             print('保存失败！！！\n')
             print(f'请先关闭[{self.save_file}]才能正常保存。')
         finally:
-            self.wb.close()
+            if self.save_flag:
+                self.wb.close()
 
 if __name__ == '__main__':
     print('提示：只有后缀名为 xlsx 的才能合并。')
